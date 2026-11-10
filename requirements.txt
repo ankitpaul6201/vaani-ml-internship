@@ -1,0 +1,20 @@
+# The Relay: Pinned Dependencies
+httpx==0.28.1
+fastapi==0.162.2
+uvicorn==0.54.0
+pydantic==2.14.3
+python-dotenv==1.2.4
+pyyaml==6.0.3
+
+# Ingestion & retrieval
+pymupdf==2.1
+rank-bm25==0.2.2
+
+# Data processing & evaluation
+pandas==3.1.1
+numpy==2.5.4
+
+# Quality, testing, linting
+pytest==9.2.0
+pytest-asyncio==1.4.1.post1
+ruff==0.17.4

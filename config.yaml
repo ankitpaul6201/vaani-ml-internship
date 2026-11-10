@@ -1,0 +1,65 @@
+# The Relay: Central Configuration
+# Every threshold, limit, and policy parameter lives here.
+# Hard rule: No magic numbers in code. Fail loudly if a required TBD is used in a real run.
+
+backend:
+  mode: standin                     # 'groq' for real service, 'standin' for local server
+  base_url: http://localhost:8000/v1
+  groq_base_url: https://api.groq.com/openai/v1
+
+models:
+  small: llama-3.1-8b-instant       # S1 understand & S5 verify (subject to probe confirmation)
+  large: llama-3.3-70b-versatile    # S4 draft model (fallback to small if TPM headroom is tight)
+
+limits:                             # Measured from real Groq probe (Phase 3)
+  rpm: TBD
+  tpm: TBD
+  rpd: TBD
+  tpd: TBD
+  max_in_flight: TBD
+
+patience_s: 20.0                    # Starting client patience limit; drives request deadlines
+
+retry:
+  max_attempts: 2
+  budget_share: 0.10                # Max 10% of recent calls spent on retries
+  backoff_base_s: 0.5
+  backoff_max_s: 8.0
+
+ladder:
+  l1_queue_wait_ms: TBD             # Queue wait threshold to drop model verification
+  l2_bucket_pct: TBD                # Token bucket threshold to switch to smaller draft model
+  l3_daily_pct: 95                  # Daily quota threshold to switch to extractive answers
+  l4_daily_pct: 100                 # Daily budget exhaustion threshold (no model calls)
+
+retrieval:
+  setting: B                        # Current active setting (A, B, or C)
+  settings:
+    A:
+      description: "Small pieces, high fetch count, no reranking"
+      chunk_size_tokens: 200
+      top_k: 8
+      rerank: false
+    B:
+      description: "Medium pieces, balanced fetch count, no reranking"
+      chunk_size_tokens: 500
+      top_k: 4
+      rerank: false
+    C:
+      description: "Medium pieces, over-fetch with local CPU dense reranking"
+      chunk_size_tokens: 500
+      fetch_k: 10
+      top_k: 4
+      rerank: true
+      reranker_model: "all-MiniLM-L6-v2"
+
+circuit_breaker:
+  failure_threshold: 5
+  recovery_timeout_s: 15.0
+
+paths:
+  papers_dir: "data/papers"
+  hashes_file: "data/papers/hashes.sha256"
+  results_csv: "results/results.csv"
+  traces_jsonl: "results/traces.jsonl"
+  daily_budget_file: "results/daily_budget.json"

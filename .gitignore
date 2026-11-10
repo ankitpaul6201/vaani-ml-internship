@@ -1,0 +1,32 @@
+# Environment variables & secrets (NEVER COMMIT)
+.env
+*.env
+*.pem
+*.key
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+
+# Distribution / builds
+build/
+dist/
+*.egg-info/
+
+# Local data cache and logs
+.coverage
+htmlcov/
+*.log
+
+# OS artifacts
+.DS_Store
+Thumbs.db
