@@ -110,10 +110,12 @@ class TraceRecord:
     queue_wait_ms: float = 0.0
     work_ms: float = 0.0
     retry_ms: float = 0.0
+    model_first_byte_ms: float = 0.0
     tokens_in: int = 0
     tokens_out: int = 0
     first_token_ms: float = 0.0
     total_ms: float = 0.0
+    seed: int = 42
     answer_grade: str = ""
 
     def to_json(self) -> str:
@@ -146,3 +148,42 @@ def append_trace_record(file_path: Path, trace: TraceRecord) -> None:
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "a", encoding="utf-8") as f:
         f.write(trace.to_json() + "\n")
+
+
+def read_results_csv(file_path: Path) -> list[ResultRow]:
+    """Reads all rows from results.csv into validated ResultRow objects."""
+    if not file_path.exists():
+        return []
+    rows: list[ResultRow] = []
+    with open(file_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            rows.append(
+                ResultRow(
+                    request_id=r["request_id"],
+                    scenario=r["scenario"],
+                    source=r["source"],  # type: ignore
+                    start_time=r["start_time"],
+                    first_token_ms=float(r["first_token_ms"]),
+                    total_ms=float(r["total_ms"]),
+                    status=r["status"],  # type: ignore
+                    retries=int(r["retries"]),
+                    tokens_in=int(r["tokens_in"]),
+                    tokens_out=int(r["tokens_out"]),
+                    retrieval_setting=r["retrieval_setting"],
+                    answer_grade=r.get("answer_grade", ""),  # type: ignore
+                )
+            )
+    return rows
+
+
+def read_traces_jsonl(file_path: Path) -> list[dict]:
+    """Reads all traces from traces.jsonl into dictionaries."""
+    if not file_path.exists():
+        return []
+    traces: list[dict] = []
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                traces.append(json.loads(line))
+    return traces

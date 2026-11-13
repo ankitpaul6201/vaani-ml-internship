@@ -13,4 +13,5 @@ exclude = [
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
 ignore = ["E501"]
+per-file-ignores = { "analysis/*" = ["E402"], "experiments/*" = ["E402"], "tests/*" = ["E402"] }
 

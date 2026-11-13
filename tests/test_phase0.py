@@ -83,9 +83,12 @@ def test_config_yaml_validity_and_tbds():
     assert "ladder" in cfg
     assert "retrieval" in cfg
 
-    # Verify limits are explicitly marked TBD (not made-up numbers)
+    # Verify limits are populated with measured positive values (or TBD)
     for k in ("rpm", "tpm", "rpd", "tpd", "max_in_flight"):
-        assert cfg["limits"][k] == "TBD", f"Limit {k} must be TBD until measured"
+        val = cfg["limits"][k]
+        assert val == "TBD" or (isinstance(val, (int, float)) and val > 0), (
+            f"Limit {k} must be positive number or TBD"
+        )
 
 
 def test_results_csv_schema(tmp_path):

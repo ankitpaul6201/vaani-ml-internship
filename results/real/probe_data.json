@@ -1,0 +1,234 @@
+[
+  {
+    "probe_id": "small-1",
+    "scenario": "latency_small",
+    "prompt_tokens_est": 11,
+    "t_start": 10198.1735398,
+    "t_first_byte": 10198.5133252,
+    "t_end": 10198.561837,
+    "ttft_ms": 339.7853999995277,
+    "total_ms": 388.2971999992151,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "935",
+      "x-ratelimit-remaining-tokens": "6762",
+      "x-ratelimit-reset-requests": "1h33m36s",
+      "x-ratelimit-reset-tokens": "10.397s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-c1212ceb-3194-4fcd-b169-a49b17445b4c\",\"object\":\"chat.completion.chunk\",\"created\":1794291974,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_21e59ac2de\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "small-2",
+    "scenario": "latency_small",
+    "prompt_tokens_est": 11,
+    "t_start": 10199.0754681,
+    "t_first_byte": 10199.2157884,
+    "t_end": 10199.281444,
+    "ttft_ms": 140.32030000089435,
+    "total_ms": 205.9759000003396,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "934",
+      "x-ratelimit-remaining-tokens": "6815",
+      "x-ratelimit-reset-requests": "1h35m2.4s",
+      "x-ratelimit-reset-tokens": "9.908s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-ed70f730-da4e-4329-9da3-dfdf3c2d6101\",\"object\":\"chat.completion.chunk\",\"created\":1794291975,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_21e59ac2de\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "small-3",
+    "scenario": "latency_small",
+    "prompt_tokens_est": 11,
+    "t_start": 10199.7850342,
+    "t_first_byte": 10199.9433775,
+    "t_end": 10199.996383,
+    "ttft_ms": 158.34329999961483,
+    "total_ms": 211.34879999954137,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "933",
+      "x-ratelimit-remaining-tokens": "6851",
+      "x-ratelimit-reset-requests": "1h36m28.8s",
+      "x-ratelimit-reset-tokens": "9.394s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-1179ca78-9dfb-4e0b-85f2-3235087781bb\",\"object\":\"chat.completion.chunk\",\"created\":1794291975,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_21e59ac2de\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "med-1",
+    "scenario": "latency_medium",
+    "prompt_tokens_est": 252,
+    "t_start": 10200.5113442,
+    "t_first_byte": 10200.6542655,
+    "t_end": 10200.7284715,
+    "ttft_ms": 142.921299999216,
+    "total_ms": 217.12730000035663,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "932",
+      "x-ratelimit-remaining-tokens": "6606",
+      "x-ratelimit-reset-requests": "1h37m55.2s",
+      "x-ratelimit-reset-tokens": "11.331s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-33592062-a823-43e8-8a16-245e140e3e10\",\"object\":\"chat.completion.chunk\",\"created\":1794291976,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_21e59ac2de\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "med-2",
+    "scenario": "latency_medium",
+    "prompt_tokens_est": 252,
+    "t_start": 10201.2303208,
+    "t_first_byte": 10201.4182274,
+    "t_end": 10201.4833412,
+    "ttft_ms": 187.90660000013304,
+    "total_ms": 253.02040000133275,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "931",
+      "x-ratelimit-remaining-tokens": "6366",
+      "x-ratelimit-reset-requests": "1h39m21.6s",
+      "x-ratelimit-reset-tokens": "13.234s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-d8132e46-0212-4ce9-9451-f5b845b214d1\",\"object\":\"chat.completion.chunk\",\"created\":1794291977,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_424cb89518\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "conc-1",
+    "scenario": "concurrency",
+    "prompt_tokens_est": 11,
+    "t_start": 10201.9911947,
+    "t_first_byte": 10202.1322714,
+    "t_end": 10202.166512,
+    "ttft_ms": 141.0766999997577,
+    "total_ms": 175.31729999973322,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "930",
+      "x-ratelimit-remaining-tokens": "6418",
+      "x-ratelimit-reset-requests": "1h40m48s",
+      "x-ratelimit-reset-tokens": "12.719s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-e5435af8-b93a-47c2-aa1f-9eccb30e36cc\",\"object\":\"chat.completion.chunk\",\"created\":1794291978,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_424cb89518\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "conc-2",
+    "scenario": "concurrency",
+    "prompt_tokens_est": 11,
+    "t_start": 10201.9928931,
+    "t_first_byte": 10202.2592711,
+    "t_end": 10202.3043091,
+    "ttft_ms": 266.3780000002589,
+    "total_ms": 311.4160000004631,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "929",
+      "x-ratelimit-remaining-tokens": "6389",
+      "x-ratelimit-reset-requests": "1h42m14.4s",
+      "x-ratelimit-reset-tokens": "12.814s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-85fc9098-93c7-411e-9a56-ed1de8a711b0\",\"object\":\"chat.completion.chunk\",\"created\":1794291978,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_21e59ac2de\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "burst-1",
+    "scenario": "rate_limit_burst",
+    "prompt_tokens_est": 2400,
+    "t_start": 10202.3044482,
+    "t_first_byte": 10202.627213,
+    "t_end": 10202.8285966,
+    "ttft_ms": 322.7647999992769,
+    "total_ms": 524.1483999998309,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "928",
+      "x-ratelimit-remaining-tokens": "4000",
+      "x-ratelimit-reset-requests": "1h43m40.799s",
+      "x-ratelimit-reset-tokens": "33.24s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-bbeb9664-60fa-4004-962d-acc9cdcfa3aa\",\"object\":\"chat.completion.chunk\",\"created\":1794291978,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_a1293f40b5\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "burst-2",
+    "scenario": "rate_limit_burst",
+    "prompt_tokens_est": 2400,
+    "t_start": 10202.3062348,
+    "t_first_byte": 10202.5313481,
+    "t_end": 10202.7191249,
+    "ttft_ms": 225.11329999906593,
+    "total_ms": 412.89010000036797,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "928",
+      "x-ratelimit-remaining-tokens": "1579",
+      "x-ratelimit-reset-requests": "1h43m40.799s",
+      "x-ratelimit-reset-tokens": "53.905s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-ed3b2c8e-9891-4ba5-a72f-804f3b5bbf4b\",\"object\":\"chat.completion.chunk\",\"created\":1794291978,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_21e59ac2de\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  },
+  {
+    "probe_id": "burst-3",
+    "scenario": "rate_limit_burst",
+    "prompt_tokens_est": 2400,
+    "t_start": 10202.3078402,
+    "t_first_byte": 10202.6376912,
+    "t_end": 10202.6376912,
+    "ttft_ms": 329.8510000004171,
+    "total_ms": 329.8510000004171,
+    "status_code": 429,
+    "headers": {
+      "retry-after": "15",
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "927",
+      "x-ratelimit-remaining-tokens": "1600",
+      "x-ratelimit-reset-requests": "1h45m7.2s",
+      "x-ratelimit-reset-tokens": "53.742s"
+    },
+    "body_snippet": "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m71wngreerxt0rn6f4szzgx0` service tier `on_demand` on input tokens per minute (ITPM): Limit 7000, Used 6270, Requested 2412. Please try again in 14.417142857s. Need more tokens? Upgrade to Dev Tier today at h",
+    "error": "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m71wngreerxt0rn6f4szzgx0` service tier `on_demand` on input tokens per minute (ITPM): Limit 7000, Used 6270, Requested 2412. Please try again in 14.417142857s. Need more tokens? Upgrade to Dev Tier today at h"
+  },
+  {
+    "probe_id": "recovery-poll-1",
+    "scenario": "recovery_check",
+    "prompt_tokens_est": 2,
+    "t_start": 10203.8405393,
+    "t_first_byte": 10203.980478,
+    "t_end": 10203.9840085,
+    "ttft_ms": 139.93870000012976,
+    "total_ms": 143.4692000002542,
+    "status_code": 200,
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "926",
+      "x-ratelimit-remaining-tokens": "1754",
+      "x-ratelimit-reset-requests": "1h46m33.599s",
+      "x-ratelimit-reset-tokens": "52.568s"
+    },
+    "body_snippet": "data: {\"id\":\"chatcmpl-9f604b91-1675-4c68-891a-9ba29b8b6347\",\"object\":\"chat.completion.chunk\",\"created\":1794291979,\"model\":\"qwen/qwen3.8-27b\",\"system_fingerprint\":\"fp_a1293f40b5\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"x_groq\":{\"id\":\"req",
+    "error": null
+  }
+]

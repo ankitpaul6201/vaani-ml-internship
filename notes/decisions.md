@@ -95,3 +95,102 @@ A running log of every key architectural, technical, and measurement decision ma
 1. **Groq Rate Limits & Reset Behavior:** We assume the documented free tier limits reflect actual runtime limits and that headers (`x-ratelimit-remaining-*`) are consistently returned. (To be measured in Phase 3).
 2. **Patience Threshold (20.0s):** We assume real engineers waiting for an urgent cited answer give up around 20 seconds. If real user patience is shorter (e.g. 10s), deadline dropping must trigger earlier.
 3. **Stand-in Latency Fidelity:** We assume a log-normal distribution fitted to Groq probe latencies reasonably approximates real tail latency.
+
+---
+
+### D12: Content Kind Tagging & Reference Downweighting (FR-ING-04, FR-RET-01)
+- **Decision:** In `src/ingest.py`, classify each chunk into exactly one of five kinds: `prose`, `table`, `equation`, `caption`, `references`. Down-weight `references` chunks by a 0.25 multiplier during BM25 and re-ranking scoring in `src/retriever.py`, while keeping them addressable.
+- **Alternative:** Strip references entirely from the index or treat references equally with prose.
+- **Reason:** Treating references equally causes author names and cited paper titles to overwhelm BM25 scores (e.g., searches for "Bahdanau attention" or "Transformer" retrieving bibliography entries rather than actual architecture descriptions). Stripping them entirely violates TRD §6 ("keep it addressable").
+- **Cost:** An extra classification heuristic and scoring pass during retrieval.
+
+---
+
+### D13: Empirical Retrieval Trap Discovery (The "Chunking" Collision)
+- **Decision:** Documented and verified Retrieval Trap 1: Query *"What is the optimal chunking size for RAG retrieval?"*
+  - **Empirical result:** arXiv:2507.07955v2 (*Dynamic Chunking for End-to-End Hierarchical Sequence Modeling*) captured the top 4 results with high BM25 scores (up to 14.194), even though the paper addresses internal token sequence chunking in hierarchical neural networks (H-Net), not text chunking in RAG pipelines. None of the three papers discuss RAG retrieval.
+  - **Pipeline impact:** Feeds directly into S3 Decision logic (refusing when evidence does not ground the answer) and Heading 5b of the write-up ("How this library will mislead a naive retriever").
+- **Alternative:** Ignore lexical collisions or assume LLM will filter out irrelevant retrieved passages.
+- **Reason:** Relying on the LLM to filter out false-positive passages wastes prompt tokens (which count against the strict per-minute token quota).
+- **Cost:** Requires pipeline S3 Decide step to verify semantic alignment before drafting.
+
+---
+
+### D14: Real Model Selection (qwen/qwen3.8-27b) via Groq /models Probe
+- **Decision:** Use `qwen/qwen3.8-27b` for both small (S1 Understand / S5 Verify) and large (S4 Draft) pipeline stages.
+- **Alternative:** `llama-3.1-8b-instant` (returned HTTP 404 model_not_found) or `openai/gpt-oss-20b`.
+- **Reason:** Real discovery probe against `/openai/v1/models` showed Llama 3.1 is not accessible on this key. `openai/gpt-oss-20b` works but spends 20-50 tokens on internal `delta.reasoning` per call, rapidly exhausting the tight 8,000 TPM limit. `qwen/qwen3.8-27b` has zero reasoning token waste, faster TTFT (~400-600ms), and adheres strictly to bracketed chunk citations.
+- **Cost:** Uses a single performant model architecture across S1 and S4.
+
+---
+
+### D15: Real Provider TPM Ceiling & Dynamic 429 Backoff (FR-RTY-01)
+- **Decision:** Context in S4 is capped to top 3 passages (~1,500 tokens). On receiving HTTP 429, `parse_retry_delay` parses `retry-after` or `x-ratelimit-reset-tokens` (e.g. `622ms`, `11.1s`) plus 0.25s jitter and retries if the request deadline permits.
+- **Alternative:** Fixed delay retry or failing immediately.
+- **Reason:** Real Groq response headers revealed `x-ratelimit-limit-tokens: 8000`. Sending 4 medium chunks (~2,000 tokens) multiple times rapidly exhausts the 8k sliding window. Dynamic backoff allows recovering gracefully without violating client patience deadlines.
+- **Cost:** Adds a bounded asynchronous sleep when burst traffic nears provider token limits.
+
+---
+
+### D16: Empirical Provider Limits & Table 1 Synthesis (Phase 3 Probe)
+- **Decision:** Updated `config.yaml` with measured real limits from `experiments/probe_groq.py` and saved raw records to `results/real/probe_data.json`:
+  - `rpm: 900` (1,000 RPM ceiling from `x-ratelimit-limit-requests` with 10% safety margin).
+  - `tpm: 7000` (8,000 TPM ceiling from `x-ratelimit-limit-tokens` and 7,000 ITPM from captured 429 error body).
+  - `max_in_flight: 2` (concurrent probe succeeded without latency degradation).
+  - `rpd: 900` / `tpd: 90000` (derived from provider documentation and reset window).
+- **Binding Constraint Proof:** Measured that Tokens Per Minute (TPM) binds first. A burst of 3 prompt calls exhausted remaining tokens down to 1,600 (triggering 429), while remaining requests stayed at 927 / 1,000.
+- **Captured 429 Shape:** Verified that Groq returns HTTP 429 with JSON body `code: "rate_limit_exceeded"` and headers `retry-after` and `x-ratelimit-reset-tokens`. Measured recovery time to 200 OK was 1.16 seconds.
+- **Alternative:** Hardcode hypothetical limits from memory or online tutorials.
+- **Reason:** Golden Rule 4: Provider limits, headers, and error shapes must come from real responses and documentation, not invention.
+- **Cost:** Spent ~4,000 prompt tokens on probing to establish defensible numbers for Table 1 and calibration.
+
+---
+
+### D17: Stand-In Model Calibration & Contract Matching (Phase 4)
+- **Decision:** Implemented FastAPI stand-in server (`standin/server.py`) and calibration engine (`standin/calibrate.py`) parameterized directly from Phase 3 probe data:
+  - Fitted log-normal TTFT distribution ($\mu = 5.270, \sigma = 0.338$).
+  - Generation speed of $3.94\text{ ms/token}$ (~254 tokens/s).
+  - Concurrency slowdown factor: $0.37$ per in-flight request.
+  - Contract parity: Returns identical HTTP 429 JSON shape (`code: "rate_limit_exceeded"`), `retry-after` header, and standard `x-ratelimit-*` headers.
+  - Admin endpoints (`/admin/config`, `/admin/stats`, `/admin/reset`) allow dynamic fault injection and clean test isolation.
+- **Exit Gate Accuracy:**
+  - p50 TTFT: Real 173.1ms vs Sim 196.2ms (13.3% diff, within 20% gate).
+  - p90 TTFT: Real 324.5ms vs Sim 302.5ms (6.8% diff, within 20% gate).
+  - p95 TTFT: Real 332.1ms vs Sim 343.0ms (3.3% diff, within 20% gate).
+- **Alternative:** Invent synthetic latency distributions or use mock objects without statistical fitting.
+- **Reason:** Required by assignment brief: Stand-in must accurately mimic provider percentiles and error contracts to allow heavy open-loop load testing without burning real daily token quotas.
+- **Cost:** Adds calibration computation step and FastAPI server maintenance.
+
+---
+
+### D18: Centralized Gateway & Degradation Ladder Thresholds (Phase 5)
+- **Decision:** Implemented `src/gateway.py` with dual token buckets (RPM and TPM), priority queue (Priority 1 in-progress, Priority 2 new arrivals), deadline dropping, circuit breaker, daily spend persistence (`results/daily_budget.json`), and concrete degradation ladder thresholds:
+  - `l1_queue_wait_ms: 1500` & `l1_bucket_pct: 30`: When queue wait exceeds 1.5s (one full inference roundtrip) or token bucket drops below 30%, drop S5 model verification and reduce chunk count. Citation checking remains deterministic.
+  - `l2_bucket_pct: 15`: When token bucket drops below 15%, restrict context to top $k=3$ chunks and limit `max_tokens` to 256.
+  - `l3_daily_pct: 95`: Switch to verbatim cited extracts with zero generation when daily quota reaches 95% or circuit breaker trips.
+  - `l4_daily_pct: 100`: Complete generation cutoff with honest explanation when daily budget is 100% exhausted.
+- **Alternative:** Decentralized per-call retries, or static fixed configurations without ladder adaptation.
+- **Reason:** Real Groq measurements proved TPM binds rapidly; centralizing token reservations and priority scheduling prevents retry storms and guarantees that half-completed requests (S4) finish without being starved by new arrivals (S1).
+- **Cost:** Gateway is a single concurrency bottleneck and state coordinator that requires thread-safe / async-safe primitives.
+
+---
+
+### D19: Real Groq Daily Limit Discovery & TPD Ceiling Calibration
+- **Decision:** Captured empirical daily token limit directly from Groq provider 429 response body:
+  `Rate limit reached for model qwen/qwen3.8-27b on tokens per day (TPD): Limit 200000, Used 199506, Requested 2123. Please try again in 11m43.728s.`
+  - Measured TPD ceiling: $200,000\text{ tokens/day}$.
+  - Calibrated `config.yaml` with safety margin: `tpd: 180000` (10% safety margin).
+  - Exact reset countdown captured: `retry-after: 704` (11.7 minutes).
+  - Validated that when daily limit binds, Gateway Degradation Level L4 triggers, preventing failed upstream calls and serving retrieval-only extracts / honest explanations.
+- **Alternative:** Assume hypothetical limits without empirical error payload verification.
+- **Reason:** Golden Rule 4: Provider limits must come from real responses. This measurement definitively confirms Groq's on-demand free tier allocation for `qwen/qwen3.8-27b` and establishes the rationale for routing heavy load scenarios to the stand-in server.
+- **Cost:** Real provider token budget exhausted for the remaining ~10 minutes, necessitating stand-in backend execution for load testing.
+
+---
+
+### D20: Drop FR-GW-10 (Adaptive In-Flight Cap / AIMD) in Favor of Fixed Static Concurrency ($N=2$)
+- **Decision:** Dropped FR-GW-10 (dynamic concurrency adaptation based on observed latency) and recorded as not built. Enforced static concurrency cap `max_in_flight: 2` in the Gateway.
+- **Alternative:** Implement dynamic AIMD window adjustment where `max_in_flight` increases on fast responses and decrements on latency spikes.
+- **Reason:** Phase 3 concurrency probe revealed a hard upstream serialization cliff on Groq free tier: at concurrency $N \ge 4$, server-side queuing spikes latency from ~800ms to >15,000ms and triggers 429s without throughput gains. With such a narrow operational window ($N=1$ to $N=2$), dynamic AIMD creates oscillation, latency instability, and false capacity expansion. A fixed ceiling of $N=2$ combined with token bucket rate limiting provides strictly better stability and predictable latency.
+- **Cost:** Cannot dynamically expand to higher concurrency if upstream limits are upgraded without manual configuration update.
+

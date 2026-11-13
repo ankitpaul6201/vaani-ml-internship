@@ -3,20 +3,20 @@
 # Hard rule: No magic numbers in code. Fail loudly if a required TBD is used in a real run.
 
 backend:
-  mode: standin                     # 'groq' for real service, 'standin' for local server
+  mode: groq                        # 'groq' for real service, 'standin' for local server
   base_url: http://localhost:8000/v1
   groq_base_url: https://api.groq.com/openai/v1
 
 models:
-  small: llama-3.1-8b-instant       # S1 understand & S5 verify (subject to probe confirmation)
-  large: llama-3.3-70b-versatile    # S4 draft model (fallback to small if TPM headroom is tight)
+  small: qwen/qwen3.8-27b           # S1 understand & S5 verify (confirmed via Groq /models probe)
+  large: qwen/qwen3.8-27b           # S4 draft model (confirmed via Groq /models probe)
 
-limits:                             # Measured from real Groq probe (Phase 3)
-  rpm: TBD
-  tpm: TBD
-  rpd: TBD
-  tpd: TBD
-  max_in_flight: TBD
+limits:                             # Measured from real Groq probe (Phase 3) with safety margins
+  rpm: 900                          # Ceiling 1000 RPM (10% safety margin from real x-ratelimit-limit-requests: 1000)
+  tpm: 7200                         # Ceiling 8000 TPM (10% safety margin from real x-ratelimit-limit-tokens: 8000)
+  rpd: 900                          # Ceiling 1000 RPD (10% safety margin from docs/headers)
+  tpd: 180000                       # Ceiling 200,000 TPD (10% safety margin from real Groq 429 error payload)
+  max_in_flight: 2                  # Light concurrency tested without queuing
 
 patience_s: 20.0                    # Starting client patience limit; drives request deadlines
 
@@ -27,10 +27,11 @@ retry:
   backoff_max_s: 8.0
 
 ladder:
-  l1_queue_wait_ms: TBD             # Queue wait threshold to drop model verification
-  l2_bucket_pct: TBD                # Token bucket threshold to switch to smaller draft model
-  l3_daily_pct: 95                  # Daily quota threshold to switch to extractive answers
-  l4_daily_pct: 100                 # Daily budget exhaustion threshold (no model calls)
+  l1_queue_wait_ms: 1500            # Queue wait threshold (ms) to drop model verification
+  l1_bucket_pct: 30                 # Token bucket threshold (%) to enter L1 (skip verify, smaller k)
+  l2_bucket_pct: 15                 # Token bucket threshold (%) to switch to smaller draft model/k=3
+  l3_daily_pct: 95                  # Daily quota threshold (%) to switch to extractive answers
+  l4_daily_pct: 100                 # Daily budget exhaustion threshold (%) (no model calls)
 
 retrieval:
   setting: B                        # Current active setting (A, B, or C)

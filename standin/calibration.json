@@ -1,0 +1,31 @@
+{
+  "fitted_model": "qwen/qwen3.8-27b",
+  "sample_size": 10,
+  "lognormal_mu": 5.2704,
+  "lognormal_sigma": 0.3383,
+  "base_ttft_p50_ms": 173.1,
+  "base_ttft_p95_ms": 332.1,
+  "ms_per_token": 3.94,
+  "concurrency_penalty": 0.37,
+  "rpm_limit": 1000,
+  "tpm_limit": 8000,
+  "rpd_limit": 1000,
+  "tpd_limit": 100000,
+  "comparison": {
+    "p50_ms": {
+      "real": 173.1,
+      "standin_sim": 196.2,
+      "diff_pct": 13.3
+    },
+    "p90_ms": {
+      "real": 324.5,
+      "standin_sim": 302.5,
+      "diff_pct": 6.8
+    },
+    "p95_ms": {
+      "real": 332.1,
+      "standin_sim": 343.0,
+      "diff_pct": 3.3
+    }
+  }
+}

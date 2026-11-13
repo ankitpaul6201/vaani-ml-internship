@@ -1,0 +1,152 @@
+# experiments/questions.yaml - Phase 7 Quality Evaluation Set
+# 16 curated questions across 4 required categories with rubrics and gold standards.
+
+questions:
+  # Category 1: Factual (6 questions)
+  - id: "q01_transformer_attention_heads"
+    category: "factual"
+    papers: ["1706.03762"]
+    question: "How many parallel attention heads does the base Transformer model use, and what is the dimensionality of each head?"
+    gold_answer: "The base Transformer model uses 8 parallel attention heads (h = 8). For each head, the dimension is d_k = d_v = d_model / h = 64."
+    source_chunks: ["1706.03762v7-p5-m015"]
+    trap: "Confusing the base model (8 heads, d_k=64) with the big model (16 heads) or conflating d_model (512) with d_k."
+    expected_grade: "correct"
+
+  - id: "q02_moshi_neural_codec"
+    category: "factual"
+    papers: ["2410.00037"]
+    question: "What neural audio codec does Moshi use for real-time speech tokenization, and what is its framerate?"
+    gold_answer: "Moshi uses the Mimi neural audio codec, which operates at a framerate of 12.5 Hz (downsampled from 24 kHz audio)."
+    source_chunks: ["2410.00037v1-p2-m005"]
+    trap: "Naming EnCodec or SoundStream instead of Mimi, or guessing 50 Hz instead of 12.5 Hz."
+    expected_grade: "correct"
+
+  - id: "q03_dynamic_chunking_hnet"
+    category: "factual"
+    papers: ["2406.12643"]
+    question: "What are the primary architectural components of the H-Net module in Dynamic Chunking?"
+    gold_answer: "H-Net consists of an Acoustic Boundary Predictor/Detector that outputs soft boundary probabilities and a Dynamic Chunk Pooling mechanism that groups variable frames."
+    source_chunks: ["2406.12643v2-p3-m008"]
+    trap: "Describing standard fixed chunking or confounding text boundary prediction with acoustic boundary prediction."
+    expected_grade: "correct"
+
+  - id: "q04_transformer_bleu_score"
+    category: "factual"
+    papers: ["1706.03762"]
+    question: "What BLEU score did the base Transformer model achieve on the WMT 2014 English-to-German translation task?"
+    gold_answer: "The base Transformer achieved a BLEU score of 27.3 on the WMT 2014 English-to-German task (the big Transformer achieved 28.4)."
+    source_chunks: ["1706.03762v7-p8-m026"]
+    trap: "Reporting 28.4 BLEU (which is the Transformer big model) instead of 27.3 (base model) or confusing En-De with En-Fr (38.1/41.8)."
+    expected_grade: "correct"
+
+  - id: "q05_moshi_overall_latency"
+    category: "factual"
+    papers: ["2410.00037"]
+    question: "What is the theoretical latency and real-world acoustic latency of the Moshi dialogue system?"
+    gold_answer: "Moshi achieves a theoretical latency of 160ms (with an 80ms frame size and 80ms acoustic lookahead) and a real-world speech-to-speech latency around 200ms."
+    source_chunks: ["2410.00037v1-p1-m003"]
+    trap: "Quoting human conversational latency (~200ms) without distinguishing the 160ms algorithmic chunk/lookahead latency."
+    expected_grade: "correct"
+
+  - id: "q06_transformer_optimizer"
+    category: "factual"
+    papers: ["1706.03762"]
+    question: "What optimizer, beta parameters, and learning rate schedule were used for training the Transformer?"
+    gold_answer: "The Adam optimizer was used with beta1 = 0.9, beta2 = 0.98, and eps = 10^-9, with warmup_steps = 4000 and learning rate proportional to the inverse square root of step number."
+    source_chunks: ["1706.03762v7-p7-m022"]
+    trap: "Claiming standard Adam betas (0.9, 0.999) or SGD with cosine annealing instead of beta2=0.98 and inverse square root decay."
+    expected_grade: "correct"
+
+  # Category 2: Multi-Passage Synthesis (3 questions)
+  - id: "q07_transformer_positional_encoding_interaction"
+    category: "multi_passage"
+    papers: ["1706.03762"]
+    question: "How do sinusoidal positional encodings in Section 3.5 interact with multi-head self-attention in Section 3.2 to allow the Transformer to attend to relative positions without recurrence?"
+    gold_answer: "Sinusoidal positional encodings of dimension d_model are added directly to the input embeddings. Because each wavelength forms a geometric progression, the inner product between query and key vectors can represent linear transformations of relative distance k, allowing the multi-head self-attention mechanism to attend to positions relative to each other without recurrence."
+    source_chunks: ["1706.03762v7-p5-m015", "1706.03762v7-p6-m018"]
+    trap: "Treating positional encodings as learned embeddings rather than fixed sinusoids, or ignoring how inner products capture relative shift."
+    expected_grade: "correct"
+
+  - id: "q08_moshi_dual_stream_inner_monologue"
+    category: "multi_passage"
+    papers: ["2410.00037"]
+    question: "How does Moshi synthesize text tokens and acoustic tokens through its Inner Monologue stream during streaming dialogue?"
+    gold_answer: "Moshi predicts text tokens from an Inner Monologue stream in parallel with acoustic and semantic audio tokens from the Mimi codec. The model generates semantic tokens first to condition speech generation on linguistic content before rendering acoustic tokens."
+    source_chunks: ["2410.00037v1-p2-m005", "2410.00037v1-p4-m011"]
+    trap: "Assuming text is generated by a separate external LLM or that speech is synthesized after full text completion rather than streamed concurrently."
+    expected_grade: "correct"
+
+  - id: "q09_dynamic_chunking_two_stage_training"
+    category: "multi_passage"
+    papers: ["2406.12643"]
+    question: "What are the two training stages in Dynamic Chunking and how does boundary supervision differ between them?"
+    gold_answer: "Stage 1 pretrains the speech encoder and text decoder with fixed or heuristic chunking boundaries, while Stage 2 trains H-Net with dynamic boundary prediction conditioned on linguistic/acoustic transitions with boundary regularization loss."
+    source_chunks: ["2406.12643v2-p3-m008", "2406.12643v2-p5-m014"]
+    trap: "Claiming end-to-end training from scratch without two-stage curriculum or fixed boundary warm-up."
+    expected_grade: "correct"
+
+  # Category 3: Cross-Paper Synthesis (3 questions)
+  - id: "q10_crosspaper_streaming_vs_full_attention"
+    category: "cross_paper"
+    papers: ["1706.03762", "2410.00037"]
+    question: "Compare the attention mechanism in Vaswani et al. with Moshi's streaming Transformer. How do their receptive fields and latency requirements differ?"
+    gold_answer: "Vaswani et al. uses full bidirectional self-attention across the entire sequence for the encoder, requiring the complete input utterance before processing (offline non-streaming). Moshi uses causal, streaming self-attention with temporal lookahead buffers and chunk-based processing to maintain low latency (~160-200ms) for duplex dialogue."
+    source_chunks: ["1706.03762v7-p4-m012", "2410.00037v1-p3-m007"]
+    trap: "Overlooking that Vaswani et al. encoder attends bidirectionally while Moshi requires causal streaming."
+    expected_grade: "correct"
+
+  - id: "q11_crosspaper_chunking_mechanisms"
+    category: "cross_paper"
+    papers: ["1706.03762", "2406.12643"]
+    question: "How does Dynamic Chunking's approach to sequence segmentation compare to the fixed-length self-attention blocks in standard Transformers?"
+    gold_answer: "Standard Transformers process sequences with uniform fixed positions and quadratic complexity over the sequence length. Dynamic Chunking dynamically groups variable acoustic frames into phonetically/semantically coherent chunks via H-Net, adapting chunk length to speech rate and content."
+    source_chunks: ["1706.03762v7-p5-m015", "2406.12643v2-p2-m004"]
+    trap: "Assuming standard Transformer performs chunking, or claiming Dynamic Chunking uses fixed-size sliding windows."
+    expected_grade: "correct"
+
+  - id: "q12_crosspaper_speech_representation"
+    category: "cross_paper"
+    papers: ["2410.00037", "2406.12643"]
+    question: "How does Moshi represent speech compared to the speech translation input representation in Dynamic Chunking?"
+    gold_answer: "Moshi uses Mimi, a neural audio codec that quantizes raw waveform audio into discrete multi-codebook tokens (RVQ) at 12.5 Hz, while Dynamic Chunking processes continuous acoustic features (e.g. 80-channel log mel filterbanks) through an acoustic encoder."
+    source_chunks: ["2410.00037v1-p2-m005", "2406.12643v2-p4-m010"]
+    trap: "Claiming both use discrete acoustic tokens or both use spectrogram filterbanks."
+    expected_grade: "correct"
+
+  # Category 4: Unanswerable / Scope Traps (4 questions)
+  - id: "q13_unanswerable_gpt4_cluster"
+    category: "unanswerable"
+    papers: []
+    question: "What GPU cluster topology, interconnect bandwidth, and training FLOPs were used to pretrain OpenAI's GPT-4?"
+    gold_answer: "The provided papers do not discuss or provide information about GPT-4 training infrastructure, GPU clusters, or FLOPs."
+    source_chunks: []
+    trap: "Hallucinating InfiniBand cluster details or speculative GPU numbers from internet articles not present in the indexed papers."
+    expected_grade: "refused_correctly"
+
+  - id: "q14_unanswerable_librispeech_wer"
+    category: "unanswerable"
+    papers: []
+    question: "What Word Error Rate (WER) does the original 2017 Transformer paper report on the LibriSpeech test-clean benchmark?"
+    gold_answer: "The 2017 Transformer paper does not report Word Error Rates or evaluate on the LibriSpeech benchmark; it strictly evaluates machine translation on WMT 2014."
+    source_chunks: []
+    trap: "Inventing a WER (e.g., 4.5% or 3.2%) for the Transformer, which was never evaluated on speech recognition in Vaswani et al."
+    expected_grade: "refused_correctly"
+
+  - id: "q15_unanswerable_moshi_video"
+    category: "unanswerable"
+    papers: []
+    question: "What is the parameter size and frame rate of Moshi's multimodal video diffusion head?"
+    gold_answer: "The Moshi paper does not contain a video diffusion head or video capabilities; it is an audio-text conversational model."
+    source_chunks: []
+    trap: "Inventing video generation components for Moshi, which only handles audio and text."
+    expected_grade: "refused_correctly"
+
+  - id: "q16_unanswerable_ultrasound_classification"
+    category: "unanswerable"
+    papers: []
+    question: "What classification F1-score does Dynamic Chunking achieve on clinical fetal ultrasound Doppler audio?"
+    gold_answer: "The Dynamic Chunking paper evaluates speech translation on MuST-C and does not discuss clinical medical ultrasound classification."
+    source_chunks: []
+    trap: "Hallucinating medical clinical results for a speech translation paper."
+    expected_grade: "refused_correctly"
+
