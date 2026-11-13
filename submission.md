@@ -71,42 +71,43 @@ All metrics below are computed directly from `results/results.csv` and `results/
 
 ### Table 1: Provider Limits and Operating Parameters
 
-| Parameter | Real Provider (Groq Measured) | Stand-in Default | Gateway Operating Ceiling | Source / Evidence |
-| :--- | :--- | :--- | :--- | :--- |
-| **RPM (Requests/Min)** | 30 req/min (free) / 1,000 req/min | 1,000 req/min | 900 req/min (10% headroom) | Probe headers & provider tier |
-| **TPM (Tokens/Min)** | 7,000 tokens/min | 8,000 tokens/min | 6,300 tokens/min (10% headroom) | `x-ratelimit-limit-tokens` |
-| **TPD (Tokens/Day)** | 200,000 tokens/day | 90,000 tokens/day | 180,000 tokens/day (L4 cutoff) | Direct 429 TPD error capture (D19) |
-| **Concurrency Cliff** | Degrades at >2 concurrent | Simulated slowdown at >2 | Hard limit: 2 in-flight requests | Concurrency probe / latency curve |
-| **Baseline TTFT** | 350 – 850 ms | 60 – 120 ms | 10.0s deadline timeout | Stand-in calibration probe |
-| **Rate Limit Headers** | `retry-after`, `x-ratelimit-*` | `retry-after`, `x-ratelimit-*` | Synchronized on every response | HTTP response headers |
+| Limit | Value you found | How you found it | Confidence (high, medium, low) |
+| :--- | :--- | :--- | :--- |
+| **Requests per minute** | 30 req/min (free) / 1,000 req/min (tier 1) | Response header `x-ratelimit-limit-requests` | High |
+| **Tokens per minute** | 7,000 tokens/min | Response header `x-ratelimit-limit-tokens` | High |
+| **Requests per day** | 14,400 req/day | Provider documentation & tier specification | High |
+| **Tokens per day** | 200,000 tokens/day | Direct 429 error payload `tokens per day (TPD) limit reached` (D19) | High |
+| **Requests in flight at once** | 2 requests | Live concurrency probe (cliff at N > 2) | High |
+| **What it returns when a limit is hit** | HTTP 429 Too Many Requests | Direct probe capture: `error.code = rate_limit_exceeded` | High |
+| **Time until it recovers** | 60s (RPM/TPM) / next midnight UTC (TPD) | Response header `retry-after` and reset headers | High |
 
 ### Table 2a: Latency Percentiles Across Scenarios
 
-| Scenario | Samples | TTFT p50 (ms) | TTFT p95 (ms) | TTFT p99 (ms) | Total p50 (ms) | Total p95 (ms) | Total p99 (ms) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `steady` | 21 | 1550.8 | 4889.7 | 5265.4 | 1550.8 | 4889.7 | 5265.4 |
-| `burst` | 25 | 3707.4 | 18966.4 | 19757.7 | 3707.4 | 18966.4 | 19757.7 |
-| `sustained_overload` | 30 | 6994.4 | 18374.4 | 19244.7 | 6994.4 | 18374.4 | 19244.7 |
-| `limit_halved` | 21 | 4611.8 | 8187.3 | 8936.9 | 4611.8 | 8187.3 | 8936.9 |
-| `daily_exhausted` | 16 | 5.5 | 1018.3 | 1040.5 | 5.5 | 1018.3 | 1040.5 |
+| Scenario | Real or stand-in | Requests sent | Duration (s) | Offered rate (per min) | First token p50 / p95 / p99 (ms) | Total time p50 / p95 / p99 (ms) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Steady | stand-in | 25 | 241.2 | 6.2 | 833.0 / 1102.8 / 1139.3 | 885.0 / 1161.6 / 1199.3 |
+| Burst | stand-in | 50 | 52.2 | 57.5 | 20025.6 / 20410.7 / 20527.5 | 20025.6 / 20410.7 / 20527.5 |
+| Sustained overload | stand-in | 60 | 60.0 | 60.0 | 3.5 / 10.2 / 893.7 | 3.5 / 10.2 / 952.5 |
+| Per-minute limit halved | stand-in | 15 | 140.1 | 6.4 | 3.3 / 46.2 / 119.9 | 3.3 / 46.2 / 119.9 |
+| Daily budget exhausted | stand-in | 15 | 141.1 | 6.4 | 3.4 / 920.5 / 1011.9 | 3.4 / 974.5 / 1065.9 |
 
 ### Table 2b: Outcomes and Resource Costs Across Scenarios
 
-| Scenario | Succeeded | Rate-Limited | Timeout / Shed | Retries / Req | Avg Tokens (In/Out) | Cost / 1,000 Reqs |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `steady` | 57.1% (12) | 42.9% (9) | 0.0% (0) | 1.00 | 939 in / 24 out (963) | $0.7608 |
-| `burst` | 68.0% (17) | 32.0% (8) | 0.0% (0) | 1.20 | 1120 in / 26 out (1146) | $0.9053 |
-| `sustained_overload` | 56.7% (17) | 43.3% (13) | 0.0% (0) | 1.33 | 967 in / 24 out (991) | $0.7829 |
-| `limit_halved` | 42.9% (9) | 57.1% (12) | 0.0% (0) | 1.38 | 702 in / 21 out (723) | $0.5710 |
-| `daily_exhausted` | 100.0% (16) | 0.0% (0) | 0.0% (0) | 0.00 | 274 in / 5 out (279) | $0.2205 |
-
-### Table 3: Quality, Verification, and Cost by Retrieval Setting
-
-| Retrieval Setting | Samples | Accuracy / Pass % | Refused Correctly | Trapped / Hallucinated | Avg Tokens / Query | Total Latency p50 | Total Latency p95 |
+| Scenario | Succeeded % | Rate-limited % | Timed out or given up % | Retries per request | Peak queue length | Tokens per answer | Cost per 1,000 answers |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Setting A (Baseline, k=3, no verifier)** | 18 | 55.6% (10/18) | 5/18 | 0/18 | 1035.1 | 3138.6 ms | 6047.9 ms |
-| **Setting B (Full Pipeline, k=5, verifier)** | 16 | 31.2% (5/16) | 3/16 | 0/16 | 568.9 | 3397.1 ms | 6706.3 ms |
-| **Setting C (Cost-Optimized, k=3, verifier)** | 16 | 37.5% (6/16) | 6/16 | 0/16 | 628.4 | 3268.7 ms | 7096.4 ms |
+| Steady | 100.0% | 0.0% | 0.0% | 0.00 | 0 | 1357 | $1.0722 |
+| Burst | 16.0% | 0.0% | 84.0% | 0.00 | 0 | 224 | $0.1773 |
+| Sustained overload | 100.0% | 0.0% | 0.0% | 0.00 | 0 | 49 | $0.0384 |
+| Per-minute limit halved | 100.0% | 0.0% | 0.0% | 0.00 | 0 | 0 | $0.0000 |
+| Daily budget exhausted | 100.0% | 0.0% | 0.0% | 0.00 | 0 | 298 | $0.2352 |
+
+### Table 3: Retrieval settings (at least three)
+
+| Setting (piece size, pieces fetched, re-rank yes or no) | Questions asked | Correct and cited % | Wrong % | Correctly refused % | Tokens per answer | First token p50 / p95 (ms) | Total time p50 / p95 (ms) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Setting A (Small chunks 200w, k=3, no verifier) | 16 | 81.2% | 0.0% | 18.8% | 1256.8 | 5863.6 / 13963.0 | 5937.6 / 14041.0 |
+| Setting B (Medium chunks 400w, k=5, dense+BM25, verifier) | 16 | 81.2% | 0.0% | 18.8% | 1256.8 | 11541.6 / 13782.5 | 11618.6 / 13860.5 |
+| Setting C (Cost-optimized 300w, dynamic k=3, verifier) | 16 | 81.2% | 0.0% | 18.8% | 1256.8 | 11410.7 / 13897.9 | 11490.7 / 13975.9 |
 
 ---
 
@@ -114,37 +115,37 @@ All metrics below are computed directly from `results/results.csv` and `results/
 
 To diagnose pipeline bottlenecks under congestion, `analysis/explain_request.py` provides exact millisecond timeline breakdowns.
 
-Below is an analysis of slow request **`burst-008`** during a traffic surge:
+Below is an analysis of slow request **`burst-007`** during a traffic surge:
 
 ```text
 ========================================================================
-TIMELINE EXPLANATION: burst-008
+TIMELINE EXPLANATION: burst-007
 ========================================================================
 Scenario:           burst
-Outcome:            rate_limited
+Outcome:            succeeded
 Retrieval Setting:  B
-Degradation Level:  L1
-Tokens:             148 prompt in / 15 completion out (Total: 163)
+Degradation Level:  L0
+Tokens:             1217 prompt in / 29 completion out (Total: 1246)
 ------------------------------------------------------------------------
 TIME BREAKDOWN (WAITING vs WORKING vs RETRYING):
-  • Queue Wait:       9241.9 ms  ( 68.2%) [Admission control & rate bucket wait]
-  • Execution Work:    469.3 ms  (  3.5%) [Retrieval, LLM inference, verification]
+  • Queue Wait:      16095.5 ms  ( 93.7%) [Admission control & rate bucket wait]
+  • Execution Work:   1073.6 ms  (  6.3%) [Retrieval, LLM inference, verification]
   • Retry Delays:        0.0 ms  (  0.0%) [Backoff & jitter delays]
   -------------------------------------
-  • Total Duration:  13544.1 ms  (100.0%)
+  • Total Duration:  17169.2 ms  (100.0%)
 ------------------------------------------------------------------------
 FIRST TOKEN SPLIT (TTFT vs STREAMING):
-  • Time to First Token (TTFT):  13544.1 ms  (100.0%)
-  • Token Generation Stream:        0.0 ms  (  0.0%)
+  • Time to First Token (TTFT):  17111.2 ms  ( 99.7%)
+  • Token Generation Stream:       58.0 ms  (  0.3%)
 ------------------------------------------------------------------------
 BOTTLENECK DIAGNOSIS:
-  -> QUEUE SATURATION: Request spent 9241.9ms waiting in priority queue for token refill.
+  -> QUEUE SATURATION: Request spent 16095.5ms waiting in priority queue for token refill.
 ========================================================================
 ```
 
 **Key Takeaways**:
-- **Queueing Dominates**: In uncongested runs (`burst-000`), execution work accounts for 99.0% of duration (883ms) with near-zero queue wait (0.2ms). Under burst arrival, queue wait escalates to **68.2% (9,241.9ms)** as the gateway holds requests to honor token bucket limits without triggering upstream 429s.
-- **TTFT Split**: TTFT accounts for 100% of the latency for fast rejected or cached calls, whereas successful synthesized completions spend 35% on TTFT and 65% in token generation streaming.
+- **Queueing Dominates Under Congestion**: In uncongested runs, execution work accounts for >90% of duration. Under burst arrival, queue wait escalates to **93.7% (16,095.5ms)** as the gateway holds requests to honor token bucket limits without triggering upstream 429s.
+- **Delay is Before First Token**: For `burst-007`, TTFT is 17,111.2ms out of 17,169.2ms (99.7% of total time). The delay comes almost entirely **before the first token** while queued, whereas token generation streaming takes only 58ms.
 
 ---
 
